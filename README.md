@@ -15,5 +15,5 @@ high fidelity scenes.
 - [ ] Look into novel deep-learning optimization techniques
 
 ## References
-1 Kerbl, B. et al. (2023) ‘3d Gaussian splatting for real-time radiance field rendering’, ACM Transactions on Graphics, 42(4), pp. 1–14. doi:10.1145/3592433. 
+[1] Kerbl, B. et al. (2023) ‘3d Gaussian splatting for real-time radiance field rendering’, ACM Transactions on Graphics, 42(4), pp. 1–14. doi:10.1145/3592433. 
 
