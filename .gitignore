@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# CUDA build artifacts
+*.so
+*.o
+*.a
+diff_gaussian_rasterization/build/
+diff_gaussian_rasterization/_C*.so
+
+# Training outputs
+output/
+data/
+
+# Misc
+.DS_Store
+*.pth
+*.ckpt
