@@ -1,0 +1,11 @@
+name: gaussian_splatting
+channels:
+  - defaults
+dependencies:
+  - pip
+  - numpy
+  - python=3.13
+  - pytorch
+  - pytest
+  - pillow
+prefix: /home/calvin/miniconda3/envs/gaussian_splatting
