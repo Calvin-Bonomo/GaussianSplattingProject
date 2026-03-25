@@ -14,6 +14,29 @@ high fidelity scenes.
 - [ ] Apply SOTA optimizations
 - [ ] Look into novel deep-learning optimization techniques
 
+## Requirements
+This project requires:
+- CUDA 12.8
+- Python 3.13
+- Conda
+
+## Build Instructions
+
+```bash
+# Use conda to setup the environment
+conda env create -f environment.yml
+
+# Run tests
+pytest
+
+# Train scene on a dataset
+python train.py -s [PATH_TO_INPUT_IMAGES_DIR] -o [PATH_TO_OUTPUT_DIR]
+
+# Train scene on a dataset without viewer
+python train.py -s [PATH_TO_INPUT_IMAGES_DIR] -o [PATH_TO_OUTPUT_DIR] --no-viewer
+
+```
+
 ## References
 [1] Kerbl, B. et al. (2023) ‘3d Gaussian splatting for real-time radiance field rendering’, ACM Transactions on Graphics, 42(4), pp. 1–14. doi:10.1145/3592433. 
 
