@@ -29,11 +29,11 @@ conda env create -f environment.yml
 # Run tests
 pytest
 
-# Train scene on a dataset
-python train.py -s [PATH_TO_INPUT_IMAGES_DIR] -o [PATH_TO_OUTPUT_DIR]
+# Train scene on a dataset with a viewer
+python run.py -s [PATH_TO_INPUT_IMAGES_DIR] -o [PATH_TO_OUTPUT_DIR]
 
 # Train scene on a dataset without viewer
-python train.py -s [PATH_TO_INPUT_IMAGES_DIR] -o [PATH_TO_OUTPUT_DIR] --no-viewer
+python run.py -s [PATH_TO_INPUT_IMAGES_DIR] -o [PATH_TO_OUTPUT_DIR] --no-viewer
 
 ```
 

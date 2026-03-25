@@ -16,12 +16,12 @@ conda activate gaussian_splatting
 
 **Train (with built-in viewer):**
 ```bash
-python train.py -s <dataset_path> -o <output_path>
+python run.py -s <dataset_path> -o <output_path>
 ```
 
 **Train without viewer:**
 ```bash
-python train.py -s <dataset_path> -o <output_path> --no-viewer
+python run.py -s <dataset_path> -o <output_path> --no-viewer
 ```
 
 **Run tests:**
