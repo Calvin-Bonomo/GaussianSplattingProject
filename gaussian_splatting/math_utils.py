@@ -4,7 +4,7 @@ import numpy as np
 def quat_to_mat(q: np.ndarray) -> np.ndarray:
     """Convert a quaternion to a 3x3 rotation matrix.
 
-    Args:
+    Parameters:
         q: Quaternion as [x, y, z, w].
 
     Returns:
