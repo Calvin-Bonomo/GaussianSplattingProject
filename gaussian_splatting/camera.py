@@ -6,6 +6,7 @@ from math_utils import quat_to_mat
 class Camera:
     def __init__(self, rotation: np.ndarray, translation: np.ndarray, focal: np.ndarray, image: np.ndarray):
         self.transform_3D = self._create_T3D(rotation, translation, focal)
+        self.focal = focal
         self.image = image
 
     def _create_T3D(self, rotation: np.ndarray, translation: np.ndarray, focal: np.ndarray):
