@@ -2,7 +2,7 @@ import argparse
 import pycolmap
 import numpy as np
 
-from camera import Camera
+from gaussian_splatting.camera import Camera
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
