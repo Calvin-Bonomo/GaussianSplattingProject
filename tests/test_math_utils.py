@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..math_utils import quat_to_mat
+from gaussian_splatting.math_utils import quat_to_mat
 
 
 def test_identity_quaternion():
