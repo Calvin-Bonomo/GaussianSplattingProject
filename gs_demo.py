@@ -70,4 +70,5 @@ def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], no_view
 if __name__ == "__main__":
     args = parse_arguments()
     xyz, rgb, cameras = load_colmap_data(args.src)
-    run_gs_demo(xyz, rgb, cameras, args.dst)
+    run_gs_demo(xyz, rgb, cameras, args.no_viewer, args.dst)
+
