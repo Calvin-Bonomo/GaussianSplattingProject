@@ -1,13 +1,15 @@
 import argparse
 import os
+import random
 
 import pycolmap
 import numpy as np
 from PIL import Image
 
+import gaussian_splatting.hyperparameters as params
 from gaussian_splatting.camera import Camera
 from gaussian_splatting.gaussian_model import GaussianModel
-import gaussian_splatting as gs
+
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -48,12 +50,22 @@ def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]
             image))
     return xyz, rgb, cameras
     
-def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], output_dir: str):
+def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], no_viewer: bool, output_dir: str):
     # Initialize gaussians
     gaussians = GaussianModel(xyz, rgb)
 
-    iteration = 0
-    for iteration in range(
+    for iteration in range(params.MAX_ITERATIONS):
+        camera = cameras[random.randrange(len(cameras))]
+        # rasterize image
+        # Calculate loss
+        # backprop
+        if not no_viewer:
+            pass # rasterize viewer and send to window
+
+        if iteration % params.REFINEMENT_ITERATION_PERIOD != 0:
+            continue
+        # prune gaussians
+        # densify gaussians
 
 if __name__ == "__main__":
     args = parse_arguments()
