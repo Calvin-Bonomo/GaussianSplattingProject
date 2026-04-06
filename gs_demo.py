@@ -1,8 +1,13 @@
 import argparse
+import os
+
 import pycolmap
 import numpy as np
+from PIL import Image
 
 from gaussian_splatting.camera import Camera
+from gaussian_splatting.gaussian_model import GaussianModel
+import gaussian_splatting as gs
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -11,8 +16,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--no-viewer", action="store_true", help="Disable the built-in viewer")
     return parser.parse_args()
 
-def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera], list[np.ndarray]]:
-    reconstruction = pycolmap.Reconstruction(src_dir)
+def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]]:
+    reconstruction = pycolmap.Reconstruction(os.path.join(src_dir, "sparse"))
 
     # Load in point-cloud data
     xyz_list = []
@@ -25,12 +30,32 @@ def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]
     rgb = np.ndarray(rgb_list)
 
     # Load camera pose data
-    return xyz, rgb, [], []
+    cameras = []
+    image_path = os.path.join(src_dir, "images")
+
+    for _, image in reconstruction.images.items():
+        if image.camera == None: # Ignore images without cameras
+            continue
+        pose = image.cam_from_world
+        camera = image.camera
+        image = np.array(Image.open(os.path.join(image_path, image.name)).convert("RGB"))
+        cameras.append(Camera(
+            pose.rotation.quat,
+            pose.translation,
+            camera.focal,
+            camera.width,
+            camera.height,
+            image))
+    return xyz, rgb, cameras
     
-def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], images: list[np.ndarray], output_dir: str):
-    pass
+def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], output_dir: str):
+    # Initialize gaussians
+    gaussians = GaussianModel(xyz, rgb)
+
+    iteration = 0
+    for iteration in range(
 
 if __name__ == "__main__":
     args = parse_arguments()
-    xyz, rgb, cameras, images = load_colmap_data(args.src)
-    run_gs_demo(xyz, rgb, cameras, images, args.dst)
+    xyz, rgb, cameras = load_colmap_data(args.src)
+    run_gs_demo(xyz, rgb, cameras, args.dst)
