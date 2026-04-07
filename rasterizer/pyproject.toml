@@ -1,0 +1,6 @@
+[build-system]
+requires = ["pybind11"]
+
+[project]
+name = "Gaussian Rasterizer]
+version = "0.1.0"

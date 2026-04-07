@@ -9,6 +9,7 @@ from PIL import Image
 import gaussian_splatting.hyperparameters as params
 from gaussian_splatting.camera import Camera
 from gaussian_splatting.gaussian_model import GaussianModel
+import rasterizer.rasterizer as engine
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -56,7 +57,7 @@ def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], no_view
 
     for iteration in range(params.MAX_ITERATIONS):
         camera = cameras[random.randrange(len(cameras))]
-        # rasterize image
+        engine.render_frame(gaussians, camera)
         # Calculate loss
         # backprop
         if not no_viewer:
