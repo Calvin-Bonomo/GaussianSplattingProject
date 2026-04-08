@@ -28,6 +28,10 @@ conda env create -f environment.yml
 // Activate the environment
 conda activate gaussian_splatting
 
+// Build the cuda modules
+cmake -S ./rasterizer -B ./rasterizer/build
+cmake --build ./rasterizer
+
 // Learn a scene with the built-in viewer
 python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -o "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" 
 
