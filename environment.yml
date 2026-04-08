@@ -4,4 +4,11 @@ channels:
 dependencies:
   - pip
   - numpy
-prefix: /home/cbonomo/miniconda3/envs/gaussian_splatting
+  - python=3.13
+  - pytorch
+  - pytest
+  - pillow
+  - pybind11
+  - cmake
+  - cuda
+prefix: /home/calvin/miniconda3/envs/gaussian_splatting
