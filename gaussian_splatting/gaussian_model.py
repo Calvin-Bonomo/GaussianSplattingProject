@@ -12,7 +12,7 @@ class GaussianModel:
 
         # Setup the gaussian parameters
         self.mean = nn.Parameter(from_numpy(xyz).float().cuda().requires_grad_(True))
-        self.scale = nn.Parameter(torch.eye(3).unsqueeze(0).repeat(num_points, 1, 1).float().cuda().requires_grad_(True))
+        self.scale = nn.Parameter(torch.ones(num_points, 3, dtype=torch.float32).float().cuda().requires_grad_(True))
         self.rotation = nn.Parameter(rotations.cuda().requires_grad_(True))
         self.color = nn.Parameter(from_numpy(rgb).float().cuda().requires_grad_(True))
         self.opacity = nn.Parameter(0.1 * torch.ones(num_points))
