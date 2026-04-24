@@ -31,6 +31,7 @@ void forward(
     torch::Tensor tilesTouched = torch::zeros({numGaussians}, torch::kInt32),
                   means2D = torch::zeros({numGaussians * 2}, torch::kInt32),
                   cov2D = torch::zeros({numGaussians * 3}, torch::kFloat32),
+                  invCov2D = torch::zeros({numGaussians * 3}, torch::kFloat32),
                   depths = torch::zeros({numGaussians}, torch::kFloat32),
                   aabb = torch::zeros({numGaussians * 4}, torch::kFloat32),
                   gaussianOffsets = torch::zeros({numGaussians}, torch::kInt32),
@@ -46,7 +47,8 @@ void forward(
           *pViewTransform = (float *)viewTransform.contiguous().data_ptr(),
           *pCov2D = (float *)cov2D.data_ptr(),
           *pDepths = (float *)depths.data_ptr(),
-          *pAabbs = (float *)aabb.data_ptr();
+          *pAabbs = (float *)aabb.data_ptr(),
+          *pInvCov2D = (float *)invCov2D.data_ptr();
     uint32_t *pTilesTouched = (uint32_t *)tilesTouched.data_ptr(),
              *pMeans2D = (uint32_t *)means2D.data_ptr(),
              *pGaussianOffsets = (uint32_t *)gaussianOffsets.data_ptr();
@@ -64,6 +66,7 @@ void forward(
             pScales, 
             pRotations, 
             pCov2D,
+            pInvCov2D,
             pMeans2D,
             pDepths,
             pAabbs,

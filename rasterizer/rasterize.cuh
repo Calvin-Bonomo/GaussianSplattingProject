@@ -44,9 +44,13 @@ __global__ void identifyTileRanges(
 
 __global__ void rasterize(
         long long numGaussians,
+        uint2 *means2D,
+        float3 *invCov2D,
         float *opacities,
-        uint64_t *gaussianKeys,
+        float3 *colors,
         uint64_t *gaussianIndices,
+        int2 *tileRanges,
+        uint8_t *image,
         int xTiles, int yTiles,
         int width, int height);
 

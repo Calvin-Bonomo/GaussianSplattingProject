@@ -50,6 +50,7 @@ void forwardCUDA(
     uint2 *means2DCU = reinterpret_cast<uint2 *>(means2D);
     float4 *aabb = reinterpret_cast<float4 *>(aabbs);
     int2 *ranges = reinterpret_cast<int2 *>(tileRanges);
+    float3 *colorsCU = reinterpret_cast<float3 *>(colors);
     
     projectGaussians<<<numGaussians / 256, 256>>>(
             numGaussians,
@@ -110,12 +111,22 @@ void forwardCUDA(
     cub::DeviceRadixSort::SortPairs(tempStorage, tempStorageBytes, gaussianKeysIn, gaussianKeysOut, gaussianIndicesIn, gaussianIndicesOut, totalTilesTouched);
     cudaFreeAsync(tempStorage, cudaStreamPerThread);
 
-    identifyTileRanges<<<xTiles * yTiles / 256, 256>>>(
+    identifyTileRanges<<<xTiles * yTiles / 256, 256>>>( // Each thread is a tile
             xTiles * yTiles,
             totalTilesTouched, 
             gaussianKeysOut,
             ranges);
 
     // Step 5: Rasterize gaussian tiles
-
+    rasterize<<<xTiles * yTiles, 256>>>( // Each thread is a pixel on a tile
+            numGaussians,
+            means2DCU,
+            invCov2D,
+            opacities,
+            colorsCU,
+            gaussianIndicesOut,
+            ranges,
+            image,
+            xTiles, yTiles,
+            width, height);
 }

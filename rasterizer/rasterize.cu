@@ -236,6 +236,56 @@ __global__ void identifyTileRanges(
     }
 }
 
+__global__ void rasterize(
+        long long numGaussians,
+        uint2 *means2D,
+        float3 *invCov2D,
+        float *opacities,
+        float3 *colors,
+        uint64_t *gaussianIndices,
+        int2 *tileRanges,
+        uint8_t *image,
+        int xTiles, int yTiles,
+        int width, int height)
+{
+    int id = blockIdx.x * blockDim.x + threadIdx.x,
+        tileIndex = blockIdx.x,
+        tilePixelIndex = threadIdx.x;
+    if (id >= width * height || tileIndex >= xTiles * yTiles || tilePixelIndex >= TILE_SIZE * TILE_SIZE) // Ignore parts of tiles not on screen
+        return;
+
+    int2 tilePixel = { tilePixelIndex % 16, tilePixelIndex / 16 },
+         range = tileRanges[tileIndex];
+
+    float3 pixelColor = { 0, 0, 0 };
+    float pixelOpacity = 1;
+
+    for (int i = range.x; i < range.y; i++)
+    {
+        // Grab info for the current gaussian
+        uint64_t index = gaussianIndices[i];
+        float opacity = opacities[index];
+        float3 color = colors[index];
+        uint2 mean = means2D[index];
+        float3 invCov = invCov2D[index];
+        
+        // Calculate the value of the gaussian
+        float2 eval = { (float)(tilePixel.x - mean.x), (float)(tilePixel.y - mean.y) };
+        // Sample gaussian pdf
+        float g = exp(-0.5f * (eval.x * (eval.x * invCov.x + eval.y * invCov.y) + eval.y * (eval.x * invCov.y + eval.y * invCov.z)));
+        float alpha = g * opacity;
+        // Do color blending
+        pixelColor = multiply(add(pixelColor, multiply(color, alpha)), pixelOpacity);
+        pixelOpacity *= (1 - alpha);
+        if (pixelOpacity >= 0.9999)
+            break;
+    }
+    
+    image[id] = fminf(fmaxf(ceilf(pixelColor.x * 255), 255), 0); // red
+    image[id + 1] = fminf(fmaxf(ceilf(pixelColor.y * 255), 255), 0); // green
+    image[id + 2] = fminf(fmaxf(ceilf(pixelColor.z * 255), 255), 0); // blue
+}
+
 __host__ __device__ bool isCulled(float3 viewMean, float scaleMax, float zNear, float zFar, plane *clipPlane) 
 {
     // Clip against far and near clipping planes
