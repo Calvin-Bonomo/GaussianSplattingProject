@@ -16,6 +16,7 @@ void forwardCUDA(
         float *scales,
         float *rotations,
         float *cov2Ds,
+        float *invCov2Ds,
         uint32_t *means2D,
         float *depths,
         float *aabbs,

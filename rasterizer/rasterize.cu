@@ -16,6 +16,7 @@ __global__ void projectGaussians(
         float3 *scales,
         float4 *rotations,
         float3 *cov2D,
+        float3 *invCov2D,
         uint2 *means2D,
         float *depths,
         float4 *aabb,
@@ -34,6 +35,7 @@ __global__ void projectGaussians(
 
     aabb[id] = { 0, 0, 0, 0 };
     cov2D[id] = { 0, 0, 0 };
+    invCov2D[id] = { 0, 0, 0 };
     means2D[id] = { 0, 0 };
     depths[id] = 0;
 
@@ -153,12 +155,20 @@ __global__ void projectGaussians(
        ceilf(abs((fmaxf(p1.x, fmaxf(p2.x, fmaxf(p3.x, p4.x)))) / TILE_SIZE)),
        ceilf(abs((fmaxf(p1.y, fmaxf(p2.y, fmaxf(p3.y, p4.y)))) / TILE_SIZE)),
     };
+
+    // Calculate inverse covariance matrix
+    float det = 1.0f / (cov2DMat[0] * cov2DMat[3] - cov2DMat[1] * cov2DMat[1]); // 3 and 1 are equivalent
+    float invCov2DMat[4] = {
+        det * cov2DMat[3],    det * (-cov2DMat[1]),
+        det * (-cov2DMat[1]), det * cov2DMat[0]
+    };
     
     // Save data for future stages
     tilesTouched[id] = (min.x + max.x) * (min.y + max.y);
     aabb[id] = { min.x, min.y, max.x, max.y };
-    cov2D[id] = {cov2DMat[0], cov2DMat[1], cov2DMat[3]};
-    means2D[id] = {uint((viewMean.x / viewMean.z + 1) * 0.5f * width), uint((viewMean.y / viewMean.z + 1) * 0.5 * height)};
+    cov2D[id] = { cov2DMat[0], cov2DMat[1], cov2DMat[3] };
+    invCov2D[id] = { invCov2DMat[0], invCov2DMat[1], invCov2DMat[3] };
+    means2D[id] = { uint((viewMean.x / viewMean.z + 1) * 0.5f * width), uint((viewMean.y / viewMean.z + 1) * 0.5 * height) };
     depths[id] = viewMean.z;
 }
 

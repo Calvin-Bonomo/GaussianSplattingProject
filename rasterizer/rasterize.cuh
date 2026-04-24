@@ -11,6 +11,7 @@ __global__ void projectGaussians(
         float3 *scales,
         float4 *rotations,
         float3 *cov2D,
+        float3 *invCov2D,
         uint2 *means2D,
         float *depths,
         float4 *aabb,

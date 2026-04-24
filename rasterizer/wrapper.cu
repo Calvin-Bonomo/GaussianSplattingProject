@@ -13,6 +13,7 @@ void forwardCUDA(
         float *scales,
         float *rotations,
         float *cov2Ds,
+        float *invCov2Ds,
         uint32_t *means2D,
         float *depths,
         float *aabbs,
@@ -45,6 +46,7 @@ void forwardCUDA(
     };
 
     float3 *cov2D = reinterpret_cast<float3 *>(cov2Ds);
+    float3 *invCov2D = reinterpret_cast<float3 *>(invCov2Ds);
     uint2 *means2DCU = reinterpret_cast<uint2 *>(means2D);
     float4 *aabb = reinterpret_cast<float4 *>(aabbs);
     int2 *ranges = reinterpret_cast<int2 *>(tileRanges);
@@ -55,6 +57,7 @@ void forwardCUDA(
             reinterpret_cast<float3 *>(scales),
             reinterpret_cast<float4 *>(rotations),
             cov2D,
+            invCov2D,
             means2DCU,
             depths,
             aabb,
