@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.15...4.2)
-project(GAUSSIAN_RENDERER LANGUAGES CXX)
+project(GAUSSIAN_RENDERER LANGUAGES CXX CUDA)
+
+set(CMAKE_CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
 find_package(Torch REQUIRED)
 
-pybind11_add_module(GAUSSIAN_RENDERER test.cpp)
+pybind11_add_module(GAUSSIAN_RENDERER render.cpp util.cu wrapper.cu rasterize.cu)
 target_link_libraries(GAUSSIAN_RENDERER PRIVATE "${TORCH_LIBRARIES}")
 install(TARGETS GAUSSIAN_RENDERER DESTINATION ..)
