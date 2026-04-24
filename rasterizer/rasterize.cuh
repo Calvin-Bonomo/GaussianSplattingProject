@@ -35,6 +35,18 @@ __global__ void duplicateWithKeys(
         uint32_t *gaussianOffsets,
         int xTiles, int yTiles);
 
-__global__ void rasterize();
+__global__ void identifyTileRanges(
+        int totalTiles,
+        int totalTilesTouched,
+        uint64_t *gaussianKeys, 
+        int2 *tileRanges);
+
+__global__ void rasterize(
+        long long numGaussians,
+        float *opacities,
+        uint64_t *gaussianKeys,
+        uint64_t *gaussianIndices,
+        int xTiles, int yTiles,
+        int width, int height);
 
 #endif

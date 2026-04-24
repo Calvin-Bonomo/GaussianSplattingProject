@@ -23,9 +23,11 @@ void forwardCUDA(
         uint32_t *tilesTouched,
         smartCudaPtr<uint64_t> &&gaussianIndices,
         smartCudaPtr<uint64_t> &&gaussianKeys,
+        int32_t *tileRanges,
         uint8_t *image,
         float focalX, float focalY,
         float zNear, float zFar,
+        int xTiles, int yTiles,
         int width, int height)
 {
     // Step 1: Process gaussians (do transformations and stuff)
@@ -45,6 +47,7 @@ void forwardCUDA(
     float3 *cov2D = reinterpret_cast<float3 *>(cov2Ds);
     uint2 *means2DCU = reinterpret_cast<uint2 *>(means2D);
     float4 *aabb = reinterpret_cast<float4 *>(aabbs);
+    int2 *ranges = reinterpret_cast<int2 *>(tileRanges);
     
     projectGaussians<<<numGaussians / 256, 256>>>(
             numGaussians,
@@ -63,10 +66,6 @@ void forwardCUDA(
             zNear, zFar,
             width,
             height);
-
-    // Step 2: Determine # of tiles required
-    int xTiles = ceil(float(width) / TILE_SIZE),
-        yTiles = ceil(float(height) / TILE_SIZE);
 
     // Step 3: Assign each gaussian a key with the tile and depth
     // Find out how many tiles were touched
@@ -108,5 +107,12 @@ void forwardCUDA(
     cub::DeviceRadixSort::SortPairs(tempStorage, tempStorageBytes, gaussianKeysIn, gaussianKeysOut, gaussianIndicesIn, gaussianIndicesOut, totalTilesTouched);
     cudaFreeAsync(tempStorage, cudaStreamPerThread);
 
+    identifyTileRanges<<<xTiles * yTiles / 256, 256>>>(
+            xTiles * yTiles,
+            totalTilesTouched, 
+            gaussianKeysOut,
+            ranges);
+
     // Step 5: Rasterize gaussian tiles
+
 }

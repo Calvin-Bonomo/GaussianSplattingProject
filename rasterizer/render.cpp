@@ -5,6 +5,7 @@
 #include <torch/extension.h>
 
 #include "wrapper.hpp"
+#include "settings.hpp"
 
 namespace py = pybind11;
 
@@ -22,6 +23,10 @@ void forward(
         int height)
 {
     assert(width > 0 && height > 0 && "width and height must be greater than 0");
+
+    int xTiles = ceil(width / TILE_SIZE),
+        yTiles = ceil(height / TILE_SIZE);
+
     int64_t numGaussians = means.numel();
     torch::Tensor tilesTouched = torch::zeros({numGaussians}, torch::kInt32),
                   means2D = torch::zeros({numGaussians * 2}, torch::kInt32),
@@ -29,7 +34,8 @@ void forward(
                   depths = torch::zeros({numGaussians}, torch::kFloat32),
                   aabb = torch::zeros({numGaussians * 4}, torch::kFloat32),
                   gaussianOffsets = torch::zeros({numGaussians}, torch::kInt32),
-                  image = torch::zeros({width * height * 3}, torch::kInt8);
+                  image = torch::zeros({width * height * 3}, torch::kInt8),
+                  tileRanges = torch::zeros({xTiles * yTiles * 2}, torch::kInt32);
 
     // Prepare the data to go to CUDA
     float *pMeans = (float *)means.contiguous().data_ptr(),
@@ -45,6 +51,7 @@ void forward(
              *pMeans2D = (uint32_t *)means2D.data_ptr(),
              *pGaussianOffsets = (uint32_t *)gaussianOffsets.data_ptr();
     uint8_t *pImage = (uint8_t *)image.data_ptr();
+    int32_t *pTileRanges = (int32_t *)tileRanges.data_ptr();
 
     smartCudaPtr<uint64_t> gaussianIndices(nullptr, nullptr),
                            gaussianKeys(nullptr, nullptr);
@@ -67,9 +74,11 @@ void forward(
             pTilesTouched, 
             std::move(gaussianIndices),
             std::move(gaussianKeys),
+            pTileRanges,
             pImage,
             focal.at(0), focal.at(1), 
             zNear, zFar,
+            xTiles, yTiles,
             width, height);
 }
 

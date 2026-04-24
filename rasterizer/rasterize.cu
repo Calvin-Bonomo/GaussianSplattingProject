@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 
 #include "util.cuh"
+#include "settings.hpp"
 
 
 __host__ __device__ bool isCulled(float3 viewMean, float scaleMax, float zNear, float zFar, plane *clipPlanes);
@@ -144,13 +145,13 @@ __global__ void projectGaussians(
     // Get min and max tile indices
     float2 min = 
     {
-       ceilf(abs((fminf(p1.x, fminf(p2.x, fminf(p3.x, p4.x)))) / 16)),
-       ceilf(abs((fminf(p1.y, fminf(p2.y, fminf(p3.y, p4.y)))) / 16))
+       ceilf(abs((fminf(p1.x, fminf(p2.x, fminf(p3.x, p4.x)))) / TILE_SIZE)),
+       ceilf(abs((fminf(p1.y, fminf(p2.y, fminf(p3.y, p4.y)))) / TILE_SIZE))
     },
            max = 
     {
-       ceilf(abs((fmaxf(p1.x, fmaxf(p2.x, fmaxf(p3.x, p4.x)))) / 16)),
-       ceilf(abs((fmaxf(p1.y, fmaxf(p2.y, fmaxf(p3.y, p4.y)))) / 16)),
+       ceilf(abs((fmaxf(p1.x, fmaxf(p2.x, fmaxf(p3.x, p4.x)))) / TILE_SIZE)),
+       ceilf(abs((fmaxf(p1.y, fmaxf(p2.y, fmaxf(p3.y, p4.y)))) / TILE_SIZE)),
     };
     
     // Save data for future stages
@@ -193,6 +194,34 @@ __global__ void duplicateWithKeys(
             int tileId = startTileId + xBound + xTiles * yBound;
             gaussianKeys[offset + tilesWritten] = ((uint64_t)tileId) << 32 | depthAsInt;
             gaussianIndices[offset + (tilesWritten++)] = id;
+        }
+    }
+}
+
+__global__ void identifyTileRanges(
+        int totalTiles,
+        int totalTilesTouched,
+        uint64_t *gaussianKeys, 
+        int2 *tileRanges)
+{
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    if (id >= totalTiles)
+        return;
+
+    int startIndex = -1;
+    tileRanges[id] = { -1, -1 };
+
+    for (int i = 0; i < totalTilesTouched; i++)
+    {
+        if (gaussianKeys[i] >> 32 == id)
+        {
+            if (startIndex < 0)
+                startIndex = i;
+        }
+        else if (startIndex >= 0)
+        {
+            tileRanges[id] = { startIndex, i };
+            return;
         }
     }
 }

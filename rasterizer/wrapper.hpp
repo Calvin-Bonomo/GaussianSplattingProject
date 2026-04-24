@@ -26,9 +26,11 @@ void forwardCUDA(
         uint32_t *tilesTouched,
         smartCudaPtr<uint64_t> gaussianIndices,
         smartCudaPtr<uint64_t> gaussianKeys,
+        int32_t *tileRanges,
         uint8_t *image,
         float focalX, float focalY,
         float zNear, float zFar,
+        int xTiles, int yTiles,
         int width, int height);
 
 #endif
