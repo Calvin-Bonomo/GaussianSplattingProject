@@ -1,6 +1,15 @@
 #ifndef UTIL_CUH
 #define UTIL_CUH
 
+#define CUDA_CHECK(x) do { \
+    cudaError_t err = (x); \
+    if (err != cudaSuccess) { \
+        throw std::runtime_error(std::string("CUDA error: ") \
+                + cudaGetErrorString(err) \
+                + " at " + __FILE__ + ":" + std::to_string(__LINE__)); \
+    } \
+} while(0)
+
 #define PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062
 
 struct plane 

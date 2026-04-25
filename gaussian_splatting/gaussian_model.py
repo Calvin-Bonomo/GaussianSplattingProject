@@ -11,11 +11,11 @@ class GaussianModel:
         rotations[:, 0] = 1.0
 
         # Setup the gaussian parameters
-        self.mean = nn.Parameter(from_numpy(xyz).float().cuda().requires_grad_(True))
-        self.scale = nn.Parameter(torch.ones(num_points, 3, dtype=torch.float32).float().cuda().requires_grad_(True))
-        self.rotation = nn.Parameter(rotations.cuda().requires_grad_(True))
-        self.color = nn.Parameter(from_numpy(rgb).float().cuda().requires_grad_(True))
-        self.opacity = nn.Parameter(0.1 * torch.ones(num_points))
+        self.mean = from_numpy(xyz).float().cuda().requires_grad_(True)
+        self.scale = 0.01 * torch.ones(num_points, 3, dtype=torch.float32).float().cuda().requires_grad_(True)
+        self.rotation = rotations.cuda().requires_grad_(True)
+        self.color = from_numpy(rgb.astype(np.float32) / 255.0).float().cuda().requires_grad_(True)
+        self.opacity = 0.1 * torch.ones(num_points)
 
         # Setup the optimizer
-        self.optimizer = optim.adam.Adam() # TODO: Setup learning rates
+        #self.optimizer = optim.Adam() # TODO: Setup learning rates

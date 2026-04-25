@@ -2,6 +2,7 @@ import argparse
 import os
 import random
 
+import cv2
 import pycolmap
 import numpy as np
 from PIL import Image
@@ -9,6 +10,7 @@ from PIL import Image
 import gaussian_splatting.hyperparameters as params
 from gaussian_splatting.camera import Camera
 from gaussian_splatting.gaussian_model import GaussianModel
+from gaussian_splatting.render_settings import RenderSettings
 import rasterizer.rasterizer as engine
 
 
@@ -20,17 +22,17 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]]:
-    reconstruction = pycolmap.Reconstruction(os.path.join(src_dir, "sparse"))
+    reconstruction = pycolmap.Reconstruction(os.path.abspath(os.path.join(src_dir, "sparse/0/")))
 
     # Load in point-cloud data
     xyz_list = []
     rgb_list = []
     for _, point in reconstruction.points3D.items():
-        xyz_list.append(point.xyz)
-        rgb_list.append(point.rgb)
+        xyz_list.extend(point.xyz.tolist())
+        rgb_list.extend(point.color.tolist())
 
-    xyz = np.ndarray(xyz_list)
-    rgb = np.ndarray(rgb_list)
+    xyz = np.array(xyz_list)
+    rgb = np.array(rgb_list)
 
     # Load camera pose data
     cameras = []
@@ -39,13 +41,14 @@ def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]
     for _, image in reconstruction.images.items():
         if image.camera == None: # Ignore images without cameras
             continue
-        pose = image.cam_from_world
+        pose = image.cam_from_world()
         camera = image.camera
         image = np.array(Image.open(os.path.join(image_path, image.name)).convert("RGB"))
         cameras.append(Camera(
             pose.rotation.quat,
             pose.translation,
-            camera.focal,
+            camera.focal_length_x,
+            camera.focal_length_y,
             camera.width,
             camera.height,
             image))
@@ -54,10 +57,15 @@ def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]
 def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], no_viewer: bool, output_dir: str):
     # Initialize gaussians
     gaussians = GaussianModel(xyz, rgb)
+    render_settings = RenderSettings()
 
     for iteration in range(params.MAX_ITERATIONS):
         camera = cameras[random.randrange(len(cameras))]
-        engine.render_frame(gaussians, camera)
+        image = engine.render_frame(gaussians, camera, render_settings)
+        cpu_image = image.to('cpu').numpy()
+        cpu_image.reshape(camera.height, camera.width, 3)
+        cv2.imshow('render', cv2.cvtColor(cpu_image, cv2.COLOR_RGB2BGR))
+        cv2.waitKey(0)
         # Calculate loss
         # backprop
         if not no_viewer:

@@ -5,7 +5,7 @@
 #include <memory>
 
 template<typename T>
-void cudaAsyncDeleter(T *t);
+extern void cudaAsyncDeleter(T *t);
 
 template<typename T>
 using smartCudaPtr = std::unique_ptr<T, void(*)(T *)>;
@@ -17,7 +17,7 @@ void forwardCUDA(
         float *rotations,
         float *cov2Ds,
         float *invCov2Ds,
-        uint32_t *means2D,
+        float *means2D,
         float *depths,
         float *aabbs,
         uint32_t *gaussianOffsets,
@@ -25,8 +25,8 @@ void forwardCUDA(
         float *opacities,
         float *viewTransform,
         uint32_t *tilesTouched,
-        smartCudaPtr<uint64_t> gaussianIndices,
-        smartCudaPtr<uint64_t> gaussianKeys,
+        smartCudaPtr<uint64_t> &&gaussianIndices,
+        smartCudaPtr<uint64_t> &&gaussianKeys,
         int32_t *tileRanges,
         uint8_t *image,
         float focalX, float focalY,
@@ -34,4 +34,4 @@ void forwardCUDA(
         int xTiles, int yTiles,
         int width, int height);
 
-#endif
+        #endif

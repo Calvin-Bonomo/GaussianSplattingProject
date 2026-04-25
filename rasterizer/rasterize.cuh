@@ -12,7 +12,7 @@ __global__ void projectGaussians(
         float4 *rotations,
         float3 *cov2D,
         float3 *invCov2D,
-        uint2 *means2D,
+        float2 *means2D,
         float *depths,
         float4 *aabb,
         float *viewTransform,
@@ -20,13 +20,13 @@ __global__ void projectGaussians(
         uint32_t *tilesTouched,
         plane *clipPlanes,
         float2 focal,
-        float zNear,
-        float zFar,
+        float zNear, float zFar,
+        int xTiles, int yTiles,
         int width, int height);
 
 __global__ void duplicateWithKeys(
         long long numGaussians,
-        uint2 *means2D,
+        float2 *means2D,
         float *depths,
         float3 *cov2D,
         float4 *aabb,
@@ -44,7 +44,7 @@ __global__ void identifyTileRanges(
 
 __global__ void rasterize(
         long long numGaussians,
-        uint2 *means2D,
+        float2 *means2D,
         float3 *invCov2D,
         float *opacities,
         float3 *colors,
