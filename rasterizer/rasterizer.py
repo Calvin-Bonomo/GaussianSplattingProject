@@ -2,7 +2,6 @@ import torch
 import sys
 import os
 
-import pybind11
 sys.path.append(os.path.join(os.path.dirname(__file__), "build"))
 import gs_rasterizer
 
