@@ -5,10 +5,13 @@ dependencies:
   - pip
   - numpy
   - python=3.13
-  - pytorch
   - pytest
   - pillow
   - pybind11
   - cmake
   - cuda
+  - sysroot_linux-64
+  - clangxx_linux-64=16
+  - cuda-nvcc=12.8
+  - libtorch
 prefix: /home/calvin/miniconda3/envs/gaussian_splatting
