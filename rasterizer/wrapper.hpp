@@ -32,6 +32,7 @@ void forwardCUDA(
         float focalX, float focalY,
         float zNear, float zFar,
         int xTiles, int yTiles,
-        int width, int height);
+        int width, int height,
+        float *timeElapsedMS);
 
         #endif

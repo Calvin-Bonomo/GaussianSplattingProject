@@ -24,7 +24,6 @@ torch::Tensor forward(
         int height)
 {
     static int callCount = 0;
-    printf("timesCalled: %d\n", callCount++);
     assert(width > 0 && height > 0 && "width and height must be greater than 0");
 
     int xTiles = (width + TILE_SIZE - 1) / TILE_SIZE,
@@ -73,9 +72,9 @@ torch::Tensor forward(
 
     smartCudaPtr<uint64_t> gaussianIndices(nullptr, nullptr),
                            gaussianKeys(nullptr, nullptr);
+    
+    float timeElapsedMS;
 
-    printf("Starting CUDA pass");
-    // TODO: get output, package it and send it back
     forwardCUDA(
             numGaussians, 
             pMeans, 
@@ -98,7 +97,10 @@ torch::Tensor forward(
             focalX, focalY, 
             zNear, zFar,
             xTiles, yTiles,
-            width, height);
+            width, height,
+            &timeElapsedMS);
+
+    printf("Rasterized frame in %f ms\n", timeElapsedMS);
     return image;
 }
 

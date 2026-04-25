@@ -294,7 +294,7 @@ __host__ __device__ bool isCulled(float3 viewMean, float scaleMax, float zNear, 
 {
     // Clip against far and near clipping planes
     if (viewMean.z <= zNear || viewMean.z >= zFar)
-            return false;
+            return true;
     return isClipped(clipPlane[0], viewMean, scaleMax)
         || isClipped(clipPlane[1], viewMean, scaleMax)
         || isClipped(clipPlane[2], viewMean, scaleMax)
@@ -303,5 +303,5 @@ __host__ __device__ bool isCulled(float3 viewMean, float scaleMax, float zNear, 
 __host__ __device__ bool isClipped(plane clipPlane, float3 viewMean, float scaleMax)
 {
     float signedDistanceToPlane = dot(clipPlane.normal, viewMean);
-    return signedDistanceToPlane > -scaleMax;
+    return signedDistanceToPlane < -scaleMax;
 }

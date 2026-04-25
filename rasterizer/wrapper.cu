@@ -30,20 +30,32 @@ void forwardCUDA(
         float focalX, float focalY,
         float zNear, float zFar,
         int xTiles, int yTiles,
-        int width, int height)
+        int width, int height,
+        float *timeElapsedMS)
 {
+    // Setup timers
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
     // Step 1: Process gaussians (do transformations and stuff)
     // Initialize clipping planes
-    float3 p1 = normalize((float3){-0.5f * focalX, 0, zFar}),
-           p2 = normalize((float3){0.5f * focalX, 0, zFar}),
-           p3 = normalize((float3){0, -0.5f * focalY, zFar}),
-           p4 = normalize((float3){0, 0.5f * focalY, zFar});
-    
+    float halfW = (width  * 0.5f) / focalX;  // tan of half horizontal FOV
+    float halfH = (height * 0.5f) / focalY;  // tan of half vertical FOV
+
+    // Unnormalized normals to the four side planes, all passing through origin.
+    // Each is the cross product of the "up/right" axis with the edge ray direction.
+    float3 leftNormal   = normalize((float3){  1.f,    0.f, halfW }); // points into frustum from left plane
+    float3 rightNormal  = normalize((float3){ -1.f,    0.f, halfW });
+    float3 bottomNormal = normalize((float3){  0.f,    1.f, halfH });
+    float3 topNormal    = normalize((float3){  0.f,   -1.f, halfH });
+
     plane clipPlanes[4] = {
-        { .planeDir = p1, .normal = {p1.z, 0, -p1.x} },
-        { .planeDir = p2, .normal = {-p2.z, 0, p2.x} },
-        { .planeDir = p3, .normal = {0, -p3.z, p3.y} },
-        { .planeDir = p4, .normal = {0, p3.z, -p3.y} }
+        { .normal = leftNormal },
+        { .normal = rightNormal },
+        { .normal = bottomNormal },
+        { .normal = topNormal }
     };
 
     float3 *cov2D = reinterpret_cast<float3 *>(cov2Ds);
@@ -72,8 +84,10 @@ void forwardCUDA(
             zNear, zFar,
             xTiles, yTiles,
             width, height);
+#ifdef DEBUG_CUDA
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
+#endif
 
     // Step 3: Assign each gaussian a key with the tile and depth
     // Find out how many tiles were touched
@@ -95,28 +109,11 @@ void forwardCUDA(
     totalTilesTouched += lastCount;
     if (totalTilesTouched <= 0) // Integer overflow
         return;
-    printf("Touched %d tiles\n", totalTilesTouched);
     cudaMalloc(&gaussianKeysIn, totalTilesTouched * sizeof(uint64_t));
     cudaMalloc(&gaussianIndicesIn, totalTilesTouched * sizeof(uint64_t));
     cudaMalloc(&gaussianKeysOut, totalTilesTouched * sizeof(uint64_t));
     cudaMalloc(&gaussianIndicesOut, totalTilesTouched * sizeof(uint64_t));
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
-    std::vector<int32_t> hostTiles(numGaussians);
-    cudaMemcpy(hostTiles.data(), tilesTouched, 
-               numGaussians * sizeof(int32_t), cudaMemcpyDeviceToHost);
 
-    int32_t maxT = 0; int worstIdx = 0;
-    int64_t sumT = 0;
-    int hugeCount = 0;
-    for (int i = 0; i < numGaussians; i++) {
-        sumT += hostTiles[i];
-        if (hostTiles[i] > maxT) { maxT = hostTiles[i]; worstIdx = i; }
-        if (hostTiles[i] > 1000) hugeCount++;
-    }
-    std::cerr << "tilesTouched: sum=" << sumT 
-              << " max=" << maxT 
-              << " huge_gaussians=" << hugeCount << "\n";
     duplicateWithKeys<<<(numGaussians + 256 - 1) / 256, 256>>>(
             numGaussians,
             means2DCU, 
@@ -128,8 +125,10 @@ void forwardCUDA(
             gaussianIndicesIn, 
             gaussianOffsets,
             xTiles, yTiles);
+#ifdef DEBUG_CUDA
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
+#endif
 
     // Step 4: Sort gaussians using the cub radix sort
     tempStorage = nullptr;
@@ -138,8 +137,6 @@ void forwardCUDA(
     cudaMalloc(&tempStorage, tempStorageBytes);
     cub::DeviceRadixSort::SortPairs(tempStorage, tempStorageBytes, gaussianKeysIn, gaussianKeysOut, gaussianIndicesIn, gaussianIndicesOut, totalTilesTouched, 0, sizeof(uint64_t) * 8);
     cudaFree(tempStorage);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
     cudaFree(gaussianKeysIn);
     cudaFree(gaussianIndicesIn);
 
@@ -148,19 +145,11 @@ void forwardCUDA(
                 totalTilesTouched, 
                 gaussianKeysOut,
                 ranges);
+#ifdef DEBUG_CUDA
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
-    for (int i : {0, 100, 1000, 10000, 100000}) {
-        if (i >= numGaussians) continue;
-        float2 m; cudaMemcpy(&m, means2D + i, sizeof(float2), cudaMemcpyDeviceToHost);
-        float3 c; cudaMemcpy(&c, cov2D + i, sizeof(float3), cudaMemcpyDeviceToHost);
-        float3 ic; cudaMemcpy(&ic, invCov2D + i, sizeof(float3), cudaMemcpyDeviceToHost);
-        float3 col; cudaMemcpy(&col, colors + i, sizeof(float3), cudaMemcpyDeviceToHost);
-        std::cerr << "g[" << i << "]: mean=(" << m.x << "," << m.y << ")"
-                  << " cov=(" << c.x << "," << c.y << "," << c.z << ")"
-                  << " invCov=(" << ic.x << "," << ic.y << "," << ic.z << ")"
-                  << " color=(" << col.x << "," << col.y << "," << col.z << ")\n";
-    }
+#endif
+
     // Step 5: Rasterize gaussian tiles
     dim3 gridSize(xTiles, yTiles);
     dim3 blockSize(TILE_SIZE, TILE_SIZE);
@@ -175,9 +164,21 @@ void forwardCUDA(
             image,
             xTiles, yTiles,
             width, height);
+#ifdef DEBUG_CUDA
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
+#endif
 
     cudaFree(gaussianKeysOut);
     cudaFree(gaussianIndicesOut);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    cudaEventElapsedTime(timeElapsedMS, start, stop);
+
+    cudaError_t err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        throw std::runtime_error(std::string("CUDA error in forward: ") + cudaGetErrorString(err));
+    }
 }
