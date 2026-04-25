@@ -52,7 +52,8 @@ void forwardCUDA(
     float4 *aabb = reinterpret_cast<float4 *>(aabbs);
     int2 *ranges = reinterpret_cast<int2 *>(tileRanges);
     float3 *colorsCU = reinterpret_cast<float3 *>(colors);
-    
+    if (numGaussians <= 0) 
+        return;
     projectGaussians<<<numGaussians / 256, 256>>>(
             numGaussians,
             reinterpret_cast<float3 *>(means),
@@ -92,6 +93,8 @@ void forwardCUDA(
     cudaMemcpy(&totalTilesTouched, &gaussianOffsets[numGaussians - 1], sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(&lastCount, &tilesTouched[numGaussians - 1], sizeof(int), cudaMemcpyDeviceToHost);
     totalTilesTouched += lastCount;
+    if (totalTilesTouched <= 0) // Integer overflow
+        return;
     printf("Touched %d tiles\n", totalTilesTouched);
     cudaMalloc(&gaussianKeysIn, totalTilesTouched * sizeof(uint64_t));
     cudaMalloc(&gaussianIndicesIn, totalTilesTouched * sizeof(uint64_t));
