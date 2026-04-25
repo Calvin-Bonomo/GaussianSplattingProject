@@ -17,6 +17,10 @@ In order to run the following demo, you must have the following:
 - A NVIDIA gpu which supports CUDA 12.8
 - Conda (not technically, but you'll need to do a lot of setup yourself)
 
+## Data
+You'll need COLMAP formatted data in order to run the demo, so I recommend
+that you download the data which the paper I reference uses [here](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/).
+
 ## Usage
 ```
 // Create the conda environment using the provided environment.yml file
