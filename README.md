@@ -35,6 +35,7 @@ cmake --build ./rasterizer
 
 // Display a scene with viewer
 // To view the next image, hit any key on your keyboard (only the rasterizer works at the moment)
+// To exit, interrupt the python script with Ctrl+C and hit any key on the window with the rendered frame
 python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -o "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" 
 
 // Planned
