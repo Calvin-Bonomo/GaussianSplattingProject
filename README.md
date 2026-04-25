@@ -22,7 +22,7 @@ You'll need COLMAP formatted data in order to run the demo, so I recommend
 that you download the data which the paper I reference uses [here](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/).
 
 ## Usage
-```
+```bash
 // Create the conda environment using the provided environment.yml file
 conda env create -f environment.yml
 
@@ -31,19 +31,22 @@ conda activate gaussian_splatting
 
 // Build the cuda modules
 cmake -S ./rasterizer -B ./rasterizer/build
-cmake --build ./rasterizer
+cmake --build ./rasterizer/build
 
 // Display a scene with viewer
 // To view the next image, hit any key on your keyboard (only the rasterizer works at the moment)
 // To exit, interrupt the python script with Ctrl+C and hit any key on the window with the rendered frame
-python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -o "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" 
+python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -d "[PATH_TO_YOUR_OUTPUT_DIR_HERE]"
 
-// Planned
+// Test the rasterizer
+python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -d "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" --test-rasterizer
+
+// NOT YET IMPLEMENTED
 // Learn a scene with the built-in viewer
-python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -o "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" 
+python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -d "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" 
 
 // Learn a scene without the built-in viewer
-python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -o "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" --no-viewer
+python gs_demo.py -s "[PATH_TO_YOUR_COLMAP_DATA_HERE]" -d "[PATH_TO_YOUR_OUTPUT_DIR_HERE]" --no-viewer
 ```
 
 ## References
