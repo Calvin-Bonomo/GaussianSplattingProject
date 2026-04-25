@@ -10,7 +10,7 @@ import gs_rasterizer
 class RenderPass(torch.autograd.Function):
     @staticmethod
     def forward(ctx, gaussian_input, camera, render_settings):
-        image = gs_rasterizer.forward(
+        image, frame_time_ms = gs_rasterizer.forward(
                     gaussian_input.mean,
                     gaussian_input.scale,
                     gaussian_input.rotation,
@@ -23,7 +23,7 @@ class RenderPass(torch.autograd.Function):
                     render_settings.zFar,
                     camera.width,
                     camera.height)
-        return image
+        return image, frame_time_ms
 
     @staticmethod
     def backward(ctx, grad_output):

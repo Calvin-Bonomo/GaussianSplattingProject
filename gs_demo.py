@@ -19,6 +19,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("-s", "--src", required=True, help="Path to COLMAP data")
     parser.add_argument("-d", "--dst", required=True, help="Path to output directory")
     parser.add_argument("--no-viewer", action="store_true", help="Disable the built-in viewer")
+    parser.add_argument("--test-rasterizer", action="store_true", help="Test the rasterizer")
     return parser.parse_args()
 
 def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]]:
@@ -54,30 +55,42 @@ def load_colmap_data(src_dir: str) -> tuple[np.ndarray, np.ndarray, list[Camera]
             image))
     return xyz, rgb, cameras
     
-def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], no_viewer: bool, output_dir: str):
+def run_gs_demo(xyz: np.ndarray, rgb: np.ndarray, cameras: list[Camera], no_viewer: bool, test_rasterizer: bool, output_dir: str):
     # Initialize gaussians
     gaussians = GaussianModel(xyz, rgb)
     render_settings = RenderSettings()
 
-    for iteration in range(params.MAX_ITERATIONS):
-        camera = cameras[random.randrange(len(cameras))]
-        image = engine.render_frame(gaussians, camera, render_settings)
-        cpu_image = image.to('cpu').numpy()
-        cpu_image.reshape(camera.height, camera.width, 3)
-        cv2.imshow('render', cv2.cvtColor(cpu_image, cv2.COLOR_RGB2BGR))
-        cv2.waitKey(0)
-        # Calculate loss
-        # backprop
-        if not no_viewer:
-            pass # rasterize viewer and send to window
+    if test_rasterizer:
+        frame_times_ms = []
+        for iteration in range(params.MAX_ITERATIONS):
+            if iteration % 500 == 0:
+                print(f"Completed {iteration}/{params.MAX_ITERATIONS}")
+            camera = cameras[random.randrange(len(cameras))]
+            _, frame_time = engine.render_frame(gaussians, camera, render_settings)
+            frame_times_ms.append(frame_time)
+        frame_times_ms = np.array(frame_times_ms)
+        print(f"Mean frame time (ms): {np.mean(frame_times_ms)}")
+        print(f"Median frame time (ms): {np.median(frame_times_ms)}")
+    else:
+        for iteration in range(params.MAX_ITERATIONS):
+            camera = cameras[random.randrange(len(cameras))]
+            image, _ = engine.render_frame(gaussians, camera, render_settings)
+            cpu_image = image.to('cpu').numpy()
+            cpu_image.reshape(camera.height, camera.width, 3)
+            cv2.imshow('render', cv2.cvtColor(cpu_image, cv2.COLOR_RGB2BGR))
+            cv2.waitKey(0)
+            # Calculate loss
+            # backprop
+            if not no_viewer:
+                pass # rasterize viewer and send to window
 
-        if iteration % params.REFINEMENT_ITERATION_PERIOD != 0:
-            continue
-        # prune gaussians
-        # densify gaussians
+            if iteration % params.REFINEMENT_ITERATION_PERIOD != 0:
+                continue
+            # prune gaussians
+            # densify gaussians
 
 if __name__ == "__main__":
     args = parse_arguments()
     xyz, rgb, cameras = load_colmap_data(args.src)
-    run_gs_demo(xyz, rgb, cameras, args.no_viewer, args.dst)
+    run_gs_demo(xyz, rgb, cameras, args.no_viewer, args.test_rasterizer, args.dst)
 

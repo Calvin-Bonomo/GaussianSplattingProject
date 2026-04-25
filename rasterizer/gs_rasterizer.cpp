@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <torch/extension.h>
 #include <cstdio>
 
@@ -9,7 +9,8 @@
 
 namespace py = pybind11;
 
-torch::Tensor forward(
+std::tuple<torch::Tensor, float> 
+forward(
         torch::Tensor means, 
         torch::Tensor scales, 
         torch::Tensor rotations, 
@@ -100,8 +101,7 @@ torch::Tensor forward(
             width, height,
             &timeElapsedMS);
 
-    printf("Rasterized frame in %f ms\n", timeElapsedMS);
-    return image;
+    return std::make_tuple(image, timeElapsedMS);
 }
 
 void backward()
