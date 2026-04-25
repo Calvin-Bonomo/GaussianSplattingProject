@@ -1,0 +1,5 @@
+numpy==2.4.4
+opencv_python==4.13.0.92
+Pillow==12.2.0
+pycolmap==4.0.3
+torch==2.11.0
