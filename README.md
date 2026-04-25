@@ -1,5 +1,8 @@
 # Gaussian Splatting Exploration
 
+# --------------------- DO NOT USE THIS FOR GRADING!!!!!!---------------------
+This branch is just for fun/to make something actually complete and I am working on this after the deadline. 
+
 ## Motivation
 This project was made with the intention of exploring gaussian splatting and 
 experimenting with the usage of LLMs as part of my workflow. In this demo, I 
